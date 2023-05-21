@@ -3,11 +3,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+//Для запуска утилиты нужно указать путь к каталогу и подстроку для поиска в аргументах командной строки.
+//Например, чтобы найти подстроку "win" во всех файлах в каталоге "C:\Windows", нужно запустить команду:
+//java SubstringSearchUtility C:\Windows win
+
 public class SubstringSearchUtility {
 
     public static void main(String[] args) throws IOException {
 
-        // Проверяем, были ли предоставлены аргументы командной строки
+        // Проверяем, указали ли путь, где искать
         if (args.length < 2) {
             System.out.println("Использование: java SubstringSearchUtility <каталог> <подстрока>");
             return;
@@ -27,11 +31,11 @@ public class SubstringSearchUtility {
 
         // Обходим все файлы в каталоге и его подкаталогах
         for (File file : dir.listFiles()) {
-            // Если файл является каталогом, пропускаем его
+            // Если файл сам является каталогом, пропускаем его
             if (file.isDirectory()) {
                 continue;
             }
-            // Читаем файл построчно
+            // Проходимся по файлу, читаем построчно
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
                 int lineNumber = 1;
