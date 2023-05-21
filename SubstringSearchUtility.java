@@ -3,13 +3,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-//Для запуска утилиты нужно указать путь к каталогу и подстроку для поиска в аргументах командной строки.
-//Например, чтобы найти подстроку "win" во всех файлах в каталоге "C:\Windows", нужно запустить команду:
-//java SubstringSearchUtility C:\Windows win
-
 public class SubstringSearchUtility {
+    private static final int MAX_BUFFER_SIZE = 4096; // Максимальный размер буфера в байтах
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         // Проверяем, указали ли путь, где искать
         if (args.length < 2) {
@@ -17,40 +14,55 @@ public class SubstringSearchUtility {
             return;
         }
 
-        String directory = args[0];
+        String directoryPath = args[0];
         String substring = args[1];
 
         // Создаем объект File для указанного каталога
-        File dir = new File(directory);
+        File dir = new File(directoryPath);
 
         // Проверяем, существует ли указанный каталог и является ли он каталогом
         if (!dir.exists() || !dir.isDirectory()) {
-            System.out.println(directory + " не является каталогом");
+            System.out.println(directoryPath + " не является каталогом");
             return;
         }
 
-        // Обходим все файлы в каталоге и его подкаталогах
-        for (File file : dir.listFiles()) {
-            // Если файл сам является каталогом, пропускаем его
-            if (file.isDirectory()) {
-                continue;
-            }
-            // Проходимся по файлу, читаем построчно
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                String line;
-                int lineNumber = 1;
-                while ((line = br.readLine()) != null) {
-                    // Если в строке найдена подстрока, выводим имя файла, номер строки и позицию подстроки
-                    int index = line.indexOf(substring);
-                    if (index >= 0) {
-                        System.out.printf("%s:%d:%d%n", file.getAbsolutePath(), lineNumber, index + 1);
-                    }
-                    // Если длина строки превышает 4КБ, прекращаем чтение файла
-                    if (line.length() > 4096) {
-                        break;
-                    }
-                    lineNumber++;
+        try {
+            // Получаем список файлов в указанном каталоге
+            File directory = new File(directoryPath);
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    searchInFile(file, substring);
                 }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void searchInFile(File file, String searchStr) throws IOException {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file), MAX_BUFFER_SIZE)) {
+            String line;
+            int lineNumber = 1;
+            int position = 0;
+            int bufferOffset = 0;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                while (position != -1) {
+                    position = line.indexOf(searchStr, bufferOffset);
+                    if (position != -1) {
+                        System.out.println("Файл: " + file.getName());
+                        System.out.println("Номер строки: " + lineNumber);
+                        System.out.println("Позиция в строке: " + (position + bufferOffset));
+                        System.out.println("Содержимое строки: " + line);
+                        System.out.println();
+                        bufferOffset += position + 1;
+                    }
+                }
+                lineNumber++;
+                bufferOffset = 0;
+                position = 0;
             }
         }
     }
